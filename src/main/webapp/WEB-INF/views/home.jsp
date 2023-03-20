@@ -7,6 +7,6 @@
 <title>Insert title here</title>
 </head>
 <body>
-  <h1> Welcome to Spring Boot Web App!!!</h1>
+  <h1> Welcome to Spring Boot Web App!!! See this on AWS EC2 Instance !!! </h1>
 </body>
 </html>
