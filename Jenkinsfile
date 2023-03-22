@@ -5,13 +5,13 @@ pipeline {
 		   steps {
 					echo 'compiling..'
 					git url: 'https://github.com/kpashindla29/spring-to-aws-demo-new-3'
-					bat label: '', script: 'mvn compile'
+					'mvn compile'
 				 }
 		}
         stage('codereview-pmd') {
 		   steps {
 					echo 'codereview..'
-					bat label: '', script: 'mvn -P metrics pmd:pmd'
+					'mvn -P metrics pmd:pmd'
 			   }
 		   post {
 				   success {
@@ -22,7 +22,7 @@ pipeline {
         stage('unit-test') {
 		   steps {
 					echo 'codereview..'
-			bat label: '', script: 'mvn test'
+					'mvn test'
 			   }
 		   post {
 				   success {
@@ -33,7 +33,7 @@ pipeline {
         stage('metric-check') {
 		   steps {
 					echo 'unit test..'
-					bat label: '', script: 'mvn verify'
+					'mvn verify'
 				}
 		   post {
 				   success {
@@ -51,7 +51,7 @@ pipeline {
         stage('package') {
 		   steps {
 					echo 'metric-check..'
-					bat label: '', script: 'mvn package'	
+					'mvn package'	
 			   }		
         }
     }
