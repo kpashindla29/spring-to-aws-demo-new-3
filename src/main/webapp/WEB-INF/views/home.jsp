@@ -7,6 +7,7 @@
 <title>Insert title here</title>
 </head>
 <body>
-  <h1> Welcome to Spring Boot Web App!!! See this on AWS EC2 Instance !!! </h1>
+  <h1> Welcome to Spring Boot Web App!!! </h1>
+  <h1> Congratulations!! This application is being deployed on Tomcat 9 Server runnning on AWS EC2 Instance using Jenkins Pipeline </h1>
 </body>
 </html>
