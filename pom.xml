@@ -54,6 +54,15 @@
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
 			</plugin>
+			<plugin>
+			    <groupId>org.apache.maven.plugins</groupId>
+			    <artifactId>maven-clover-plugin</artifactId>
+			    <version>2.4</version>
+			    <configuration>
+			        <!-- Add explicit configuration -->
+			        <cloverVersion>4.2.1</cloverVersion>  <!-- or your version -->
+			    </configuration>
+			</plugin>
 		</plugins>
 		<finalName>${project.name}test</finalName>
 	</build>
