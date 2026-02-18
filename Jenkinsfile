@@ -28,7 +28,7 @@ pipeline {
 		        sh 'mvn test clover:aggregate clover:clover'
 		      }
     	}
-        stage('Report) {
+        stage('Report') {
 		  steps {
 	        clover(cloverReportDir: 'target/site', cloverReportFileName: 'clover.xml',
 	          // optional, default is: method=70, conditional=80, statement=80
