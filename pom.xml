@@ -49,6 +49,7 @@
 	</dependencies>
 
 	<profiles>
+ 		<profiles>
     <profile>
         <id>coverage</id>
         <build>
@@ -60,11 +61,14 @@
                     <configuration>
                         <generateHtml>true</generateHtml>
                         <generateXml>true</generateXml>
+                        <!-- Important: Specify the source directory -->
+                        <srcDir>${project.basedir}/src/main/java</srcDir>
+                        <destDir>${project.build.directory}/clover-instrumented</destDir>
                     </configuration>
                     <executions>
                         <execution>
                             <id>clover-instrument</id>
-                            <phase>process-test-classes</phase>
+                            <phase>process-sources</phase>
                             <goals>
                                 <goal>instrument</goal>
                             </goals>
@@ -79,6 +83,18 @@
                         </execution>
                     </executions>
                 </plugin>
+                
+                <!-- Ensure compiler uses the correct classpath -->
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-compiler-plugin</artifactId>
+                    <configuration>
+                        <compilerArgs>
+                            <arg>-cp</arg>
+                            <arg>${org.openclover:clover:jar}</arg>
+                        </compilerArgs>
+                    </configuration>
+                </plugin>
             </plugins>
         </build>
         <dependencies>
@@ -86,9 +102,10 @@
                 <groupId>org.openclover</groupId>
                 <artifactId>clover</artifactId>
                 <version>4.4.1</version>
-                <scope>test</scope>
+                <scope>compile</scope>  
             </dependency>
         </dependencies>
     </profile>
+</profiles>
 </profiles>
 </project>
