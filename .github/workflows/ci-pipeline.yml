@@ -1,11 +1,18 @@
 name: CI Pipeline (Jenkins-like)
 
+# Add required permissions
+permissions:
+  contents: read
+  pull-requests: write
+  actions: read
+  checks: write
+
 on:
   push:
     branches: [ main, develop ]
   pull_request:
     branches: [ main ]
-  workflow_dispatch:  # Allow manual triggers
+  workflow_dispatch:
 
 jobs:
   build-and-test:
@@ -14,16 +21,12 @@ jobs:
     steps:
     - name: Checkout Repository
       uses: actions/checkout@v4
-      with:
-        repository: kpashindla29/spring-to-aws-demo-new-3
-        # If it's a private repo, add token
-        # token: ${{ secrets.GITHUB_TOKEN }}
     
     - name: Set up JDK 21
       uses: actions/setup-java@v4
       with:
         java-version: '21'
-        distribution: 'temurin'  # Eclipse Temurin (Adoptium)
+        distribution: 'temurin'
         cache: maven
     
     - name: Cache Maven dependencies
@@ -54,30 +57,64 @@ jobs:
         name: pmd-results
         path: '**/target/pmd.xml'
     
-    # PMD analysis in PR comments
     - name: Comment PMD Results on PR
       if: github.event_name == 'pull_request' && always()
       uses: actions/github-script@v7
       with:
         script: |
           const fs = require('fs');
-          const files = await glob('**/target/pmd.xml');
+          const glob = require('glob');
+          
+          // Find PMD results
+          const files = glob.sync('**/target/pmd.xml');
           
           if (files.length === 0) {
             console.log('No PMD results found');
             return;
           }
           
-          // Parse and format PMD results (simplified)
-          let comment = '## PMD Code Review Results\n\n';
-          comment += 'PMD analysis completed. Check the artifacts for full results.';
+          // Read and parse PMD results (simplified - you can enhance this)
+          const pmdContent = fs.readFileSync(files[0], 'utf8');
+          const violationCount = (pmdContent.match(/<violation/g) || []).length;
           
-          github.rest.issues.createComment({
+          let comment = '## 🔍 PMD Code Review Results\n\n';
+          
+          if (violationCount > 0) {
+            comment += `⚠️ Found **${violationCount}** potential issues.\n\n`;
+            comment += 'Download the PMD artifacts for details.';
+          } else {
+            comment += '✅ No PMD violations found!';
+          }
+          
+          // Add to summary for better visibility
+          comment += '\n\n---\n*Powered by PMD analysis*';
+          
+          // Find and update or create comment
+          const { data: comments } = await github.rest.issues.listComments({
             issue_number: context.issue.number,
             owner: context.repo.owner,
-            repo: context.repo.repo,
-            body: comment
+            repo: context.repo.repo
           });
+          
+          const botComment = comments.find(comment => 
+            comment.user.type === 'Bot' && comment.body.includes('PMD Code Review Results')
+          );
+          
+          if (botComment) {
+            await github.rest.issues.updateComment({
+              comment_id: botComment.id,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment
+            });
+          } else {
+            await github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment
+            });
+          }
     
     - name: Run Tests with Clover
       run: |
@@ -102,15 +139,14 @@ jobs:
         script: |
           const fs = require('fs');
           const path = require('path');
+          const xml2js = require('xml2js');  // Better XML parsing
           
-          // Check coverage thresholds (similar to Jenkins plugin)
           const thresholds = {
             method: 70,
             conditional: 80,
             statement: 80
           };
           
-          // Try to read clover.xml and parse coverage
           const cloverPath = 'target/site/clover.xml';
           let coverage = {
             method: 0,
@@ -121,26 +157,35 @@ jobs:
           
           if (fs.existsSync(cloverPath)) {
             const content = fs.readFileSync(cloverPath, 'utf8');
-            // Simple regex to extract coverage - in real world use XML parser
-            const methodMatch = content.match(/methodCoverage="([\d.]+)"/);
-            const condMatch = content.match(/conditionalCoverage="([\d.]+)"/);
-            const stmtMatch = content.match(/statementCoverage="([\d.]+)"/);
             
-            coverage.method = methodMatch ? parseFloat(methodMatch[1]) : 0;
-            coverage.conditional = condMatch ? parseFloat(condMatch[1]) : 0;
-            coverage.statement = stmtMatch ? parseFloat(stmtMatch[1]) : 0;
+            // Parse XML properly
+            const parser = new xml2js.Parser();
+            const result = await parser.parseStringPromise(content);
             
-            coverage.passed = 
-              coverage.method >= thresholds.method &&
-              coverage.conditional >= thresholds.conditional &&
-              coverage.statement >= thresholds.statement;
+            if (result && result.coverage && result.coverage.project) {
+              const project = result.coverage.project[0];
+              const metrics = project.metrics ? project.metrics[0].$ : 
+                             (project.package ? project.package[0].metrics[0].$ : {});
+              
+              coverage.method = parseFloat(metrics.methodCoverage) || 0;
+              coverage.conditional = parseFloat(metrics.conditionalCoverage) || 0;
+              coverage.statement = parseFloat(metrics.statementCoverage) || 0;
+              
+              coverage.passed = 
+                coverage.method >= thresholds.method &&
+                coverage.conditional >= thresholds.conditional &&
+                coverage.statement >= thresholds.statement;
+            }
             
-            console.log(`Coverage - Method: ${coverage.method}%, Conditional: ${coverage.conditional}%, Statement: ${coverage.statement}%`);
-            console.log(`Thresholds - Method: ${thresholds.method}%, Conditional: ${thresholds.conditional}%, Statement: ${thresholds.statement}%`);
-            console.log(`Overall: ${coverage.passed ? 'PASSED ✓' : 'FAILED ✗'}`);
+            console.log(`📊 Coverage Report:`);
+            console.log(`   Method: ${coverage.method}% (target: ${thresholds.method}%)`);
+            console.log(`   Conditional: ${coverage.conditional}% (target: ${thresholds.conditional}%)`);
+            console.log(`   Statement: ${coverage.statement}% (target: ${thresholds.statement}%)`);
+            console.log(`   Overall: ${coverage.passed ? '✅ PASSED' : '❌ FAILED'}`);
+          } else {
+            console.log('⚠️ Clover report not found');
           }
           
-          // Set outputs
           core.setOutput('method-coverage', coverage.method);
           core.setOutput('conditional-coverage', coverage.conditional);
           core.setOutput('statement-coverage', coverage.statement);
@@ -149,7 +194,7 @@ jobs:
     - name: Check Coverage Thresholds
       if: steps.clover.outputs.coverage-passed == 'false'
       run: |
-        echo "Coverage thresholds not met!"
+        echo "❌ Coverage thresholds not met!"
         echo "Method coverage: ${{ steps.clover.outputs.method-coverage }}% (required: 70%)"
         echo "Conditional coverage: ${{ steps.clover.outputs.conditional-coverage }}% (required: 80%)" 
         echo "Statement coverage: ${{ steps.clover.outputs.statement-coverage }}% (required: 80%)"
@@ -171,9 +216,11 @@ jobs:
     - name: Display Build Summary
       if: always()
       run: |
-        echo "## Build Summary" >> $GITHUB_STEP_SUMMARY
-        echo "- Compilation: ✅" >> $GITHUB_STEP_SUMMARY
-        echo "- PMD Analysis: ${{ steps.pmd.outcome == 'success' && '✅' || '⚠️' }}" >> $GITHUB_STEP_SUMMARY
-        echo "- Tests with Clover: ✅" >> $GITHUB_STEP_SUMMARY
-        echo "- Coverage: ${{ steps.clover.outputs.method-coverage }}% methods, ${{ steps.clover.outputs.conditional-coverage }}% conditional, ${{ steps.clover.outputs.statement-coverage }}% statements" >> $GITHUB_STEP_SUMMARY
-        echo "- Package: ✅" >> $GITHUB_STEP_SUMMARY
+        echo "## 📋 Build Summary" >> $GITHUB_STEP_SUMMARY
+        echo "| Stage | Status | Details |" >> $GITHUB_STEP_SUMMARY
+        echo "|-------|--------|---------|" >> $GITHUB_STEP_SUMMARY
+        echo "| Compilation | ✅ | Completed |" >> $GITHUB_STEP_SUMMARY
+        echo "| PMD Analysis | ${{ steps.pmd.outcome == 'success' && '✅' || '⚠️' }} | ${{ steps.pmd.outcome == 'success' && 'No issues' || 'See artifacts' }} |" >> $GITHUB_STEP_SUMMARY
+        echo "| Tests with Clover | ✅ | Executed |" >> $GITHUB_STEP_SUMMARY
+        echo "| Coverage | ${{ steps.clover.outputs.coverage-passed == 'true' && '✅' || '❌' }} | Methods: ${{ steps.clover.outputs.method-coverage }}%, Conditional: ${{ steps.clover.outputs.conditional-coverage }}%, Statements: ${{ steps.clover.outputs.statement-coverage }}% |" >> $GITHUB_STEP_SUMMARY
+        echo "| Package | ✅ | Created |" >> $GITHUB_STEP_SUMMARY
