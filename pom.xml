@@ -41,17 +41,18 @@
 		    <artifactId>tomcat-embed-jasper</artifactId>
 		</dependency>
 		
-		<!-- CRITICAL: Add Clover as a compile-time dependency -->
+		<!-- Spring Boot Test -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-test</artifactId>
+			<scope>test</scope>
+		</dependency>
+		
+		<!-- Clover dependency for test runtime -->
 		<dependency>
 			<groupId>org.openclover</groupId>
 			<artifactId>clover</artifactId>
 			<version>4.4.1</version>
-			<scope>compile</scope> <!-- Must be compile, not provided or test -->
-		</dependency>
-		
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-test</artifactId>
 			<scope>test</scope>
 		</dependency>
 	</dependencies>
@@ -62,53 +63,43 @@
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
 			</plugin>
-			
-			<!-- OpenClover plugin configuration -->
-			<plugin>
-				<groupId>org.openclover</groupId>
-				<artifactId>clover-maven-plugin</artifactId>
-				<version>4.4.1</version>
-				<configuration>
-					<generateHtml>true</generateHtml>
-					<generateXml>true</generateXml>
-					<!-- Ensure Clover runtime is on classpath -->
-					<instrumentation>
-						<includeClasses>
-							<param>com/ab/**/*.class</param>
-						</includeClasses>
-					</instrumentation>
-				</configuration>
-				<executions>
-					<execution>
-						<id>clover-instrument</id>
-						<phase>process-classes</phase>
-						<goals>
-							<goal>instrument</goal>
-						</goals>
-					</execution>
-					<execution>
-						<id>clover-report</id>
-						<phase>verify</phase>
-						<goals>
-							<goal>clover</goal>
-							<goal>aggregate</goal>
-						</goals>
-					</execution>
-				</executions>
-			</plugin>
-			
-			<!-- Ensure compiler uses the right classpath -->
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-compiler-plugin</artifactId>
-				<configuration>
-					<source>21</source>
-					<target>21</target>
-					<compilerArgs>
-						<arg>-Xpkginfo:always</arg>
-					</compilerArgs>
-				</configuration>
-			</plugin>
 		</plugins>
 	</build>
+
+	<profiles>
+		<!-- Profile for code coverage with OpenClover -->
+		<profile>
+			<id>coverage</id>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.openclover</groupId>
+						<artifactId>clover-maven-plugin</artifactId>
+						<version>4.4.1</version>
+						<configuration>
+							<generateHtml>true</generateHtml>
+							<generateXml>true</generateXml>
+						</configuration>
+						<executions>
+							<execution>
+								<id>clover-setup</id>
+								<phase>process-test-classes</phase>
+								<goals>
+									<goal>setup</goal>
+								</goals>
+							</execution>
+							<execution>
+								<id>clover-report</id>
+								<phase>verify</phase>
+								<goals>
+									<goal>clover</goal>
+									<goal>aggregate</goal>
+								</goals>
+							</execution>
+						</executions>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+	</profiles>
 </project>
