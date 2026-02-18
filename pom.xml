@@ -63,7 +63,18 @@
             <configuration>
                 <generateHtml>true</generateHtml>
                 <generateXml>true</generateXml>
+                <outputDirectory>${project.build.directory}/clover</outputDirectory>
             </configuration>
+            <executions>
+                <execution>
+                    <phase>verify</phase>
+                    <goals>
+                        <goal>instrument</goal>
+                        <goal>clover</goal>
+                        <goal>aggregate</goal>
+                    </goals>
+                </execution>
+            </executions>
         </plugin>
     </plugins>
     <finalName>${project.name}test</finalName>
