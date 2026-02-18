@@ -42,7 +42,7 @@ pipeline {
 		}
         stage('package') {
 		   steps {
-					echo 'metric-check..'
+					echo 'packaging..'
 					sh 'mvn package'	
 			   }		
         }
