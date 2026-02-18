@@ -59,14 +59,6 @@ pipeline {
 			   }		
         }
         
-        stage ('Deploy') {
-	      steps {
-	        script {
-	          deploy adapters: [tomcat9(credentialsId: 'new-user', path: '', url: 'http://3.89.75.168:8085')], contextPath: '/webapptest2', onFailure: false, war: 'target/*.war' 
-	        }
-	      }
-    }
-        
         
     }
 }
