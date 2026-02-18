@@ -25,7 +25,7 @@ pipeline {
 		}
         stage('Test') {
 		      steps {
-		        sh 'mvn clover:setup test clover:aggregate clover:clover'
+		        sh 'mvn clean test -Pcoverage'
 		      }
     	}
         stage('Report') {
