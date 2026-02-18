@@ -25,7 +25,7 @@ pipeline {
 		}
         stage('Test') {
 		      steps {
-		        sh 'mvn test clover:aggregate clover:clover'
+		        sh 'mvn clover:setup test clover:aggregate clover:clover'
 		      }
     	}
         stage('Report') {
