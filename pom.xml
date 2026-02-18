@@ -48,35 +48,47 @@
 		</dependency>
 	</dependencies>
 
-	<build>
-    <plugins>
-        <plugin>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-maven-plugin</artifactId>
-        </plugin>
-        
-        <!-- Add OpenClover Plugin -->
-        <plugin>
-            <groupId>org.openclover</groupId>
-            <artifactId>clover-maven-plugin</artifactId>
-            <version>4.4.1</version>
-            <configuration>
-                <generateHtml>true</generateHtml>
-                <generateXml>true</generateXml>
-                <outputDirectory>${project.build.directory}/clover</outputDirectory>
-            </configuration>
-            <executions>
-                <execution>
-                    <phase>verify</phase>
-                    <goals>
-                        <goal>instrument</goal>
-                        <goal>clover</goal>
-                        <goal>aggregate</goal>
-                    </goals>
-                </execution>
-            </executions>
-        </plugin>
-    </plugins>
-    <finalName>${project.name}test</finalName>
-</build>
+	<profiles>
+    <profile>
+        <id>coverage</id>
+        <build>
+            <plugins>
+                <plugin>
+                    <groupId>org.openclover</groupId>
+                    <artifactId>clover-maven-plugin</artifactId>
+                    <version>4.4.1</version>
+                    <configuration>
+                        <generateHtml>true</generateHtml>
+                        <generateXml>true</generateXml>
+                    </configuration>
+                    <executions>
+                        <execution>
+                            <id>clover-instrument</id>
+                            <phase>process-test-classes</phase>
+                            <goals>
+                                <goal>instrument</goal>
+                            </goals>
+                        </execution>
+                        <execution>
+                            <id>clover-report</id>
+                            <phase>verify</phase>
+                            <goals>
+                                <goal>clover</goal>
+                                <goal>aggregate</goal>
+                            </goals>
+                        </execution>
+                    </executions>
+                </plugin>
+            </plugins>
+        </build>
+        <dependencies>
+            <dependency>
+                <groupId>org.openclover</groupId>
+                <artifactId>clover</artifactId>
+                <version>4.4.1</version>
+                <scope>test</scope>
+            </dependency>
+        </dependencies>
+    </profile>
+</profiles>
 </project>
