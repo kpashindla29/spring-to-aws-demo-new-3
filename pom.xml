@@ -82,6 +82,9 @@
 				</configuration>
 			</plugin>
 		</plugins>
+
+		<finalName>mysampleapp</finalName>
+
 	</build>
 
 	<profiles>
