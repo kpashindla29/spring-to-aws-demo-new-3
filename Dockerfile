@@ -1,4 +1,4 @@
-FROM ubuntu:22.04  # Using a specific LTS version instead of 'latest'
+FROM ubuntu:22.04
 
 LABEL maintainer="Kishore Pashindla <kpashindla@albanybeck.com>"
 
