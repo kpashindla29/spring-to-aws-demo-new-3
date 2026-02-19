@@ -1,22 +1,16 @@
-FROM ubuntu:22.04
+FROM ubuntu:latest
 
 LABEL maintainer="Kishore Pashindla <kpashindla@albanybeck.com>"
 
 # Set environment variables
-ENV TOMCAT_VERSION=9.0.80 \
-    CATALINA_HOME=/opt/tomcat \
-    JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64 \
-    PATH=$CATALINA_HOME/bin:$PATH \
-    DEBIAN_FRONTEND=noninteractive
+ENV TOMCAT_VERSION 9.0.80
+ENV CATALINA_HOME /opt/tomcat
+ENV JAVA_HOME /usr/lib/jvm/java-21-openjdk-amd64
+ENV PATH $CATALINA_HOME/bin:$PATH
 
-# Install JDK & wget packages in a single layer
+# Install JDK & wget packages
 RUN apt-get update && \
-    apt-get upgrade -y && \
-    apt-get install -y \
-        openjdk-21-jdk \
-        wget \
-        && \
-    # Clean apt cache to reduce image size
+    apt-get install -y openjdk-21-jdk wget && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
@@ -24,28 +18,27 @@ RUN apt-get update && \
 RUN mkdir -p $CATALINA_HOME && \
     wget -q https://archive.apache.org/dist/tomcat/tomcat-9/v${TOMCAT_VERSION}/bin/apache-tomcat-${TOMCAT_VERSION}.tar.gz -O /tmp/tomcat.tar.gz && \
     tar xzf /tmp/tomcat.tar.gz -C /tmp && \
-    cp -Rv /tmp/apache-tomcat-${TOMCAT_VERSION}/* $CATALINA_HOME && \
-    rm -rf /tmp/apache-tomcat-${TOMCAT_VERSION} /tmp/tomcat.tar.gz && \
-    # Remove default webapps for security
-    rm -rf $CATALINA_HOME/webapps/*
+    cp -rv /tmp/apache-tomcat-${TOMCAT_VERSION}/* $CATALINA_HOME && \
+    rm -rf /tmp/apache-tomcat-${TOMCAT_VERSION} /tmp/tomcat.tar.gz
 
-# Create a non-root user to run Tomcat (security best practice)
-RUN groupadd -r tomcat && useradd -r -g tomcat tomcat && \
-    chown -R tomcat:tomcat $CATALINA_HOME
+# Change Tomcat port to 8085
+RUN sed -i 's/port="8080"/port="8085"/g' $CATALINA_HOME/conf/server.xml
 
-# Copy your WAR file
+# Remove default webapps to clean up
+RUN rm -rf $CATALINA_HOME/webapps/*
+
+# Make sure Tomcat binaries are executable
+RUN chmod +x $CATALINA_HOME/bin/*.sh
+
+# Copy WAR file as ROOT.war for root context deployment
 COPY target/mysampleapp.war $CATALINA_HOME/webapps/ROOT.war
 
-# Extract WAR file for faster startup (optional)
-RUN cd $CATALINA_HOME/webapps && \
-    mkdir -p ROOT && \
-    cd ROOT && \
-    jar -xf ../ROOT.war && \
-    chown -R tomcat:tomcat $CATALINA_HOME/webapps
-
-# Switch to tomcat user
-USER tomcat
+# DON'T manually extract the WAR - let Tomcat do it
+# DON'T change ownership - Tomcat runs as root in Docker
 
 EXPOSE 8085
+
+# Verify catalina.sh exists and is executable
+RUN ls -la $CATALINA_HOME/bin/catalina.sh && $CATALINA_HOME/bin/catalina.sh version
 
 CMD ["catalina.sh", "run"]
