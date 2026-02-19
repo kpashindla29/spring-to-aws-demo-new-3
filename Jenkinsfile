@@ -57,5 +57,13 @@ pipeline {
                 sh 'mvn package'    
             }       
         }
+
+    stage ('Deploy') {
+	      steps {
+	        script {
+	          deploy adapters: [tomcat9(credentialsId: 'mysecret-id', path: '', url: 'http://3.80.154.160:8085')], contextPath: '/webapptest', onFailure: false, war: 'target/*.war' 
+	        }
+	      }
+    }
     }
 }
