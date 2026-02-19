@@ -1,21 +1,31 @@
-FROM maven:3.9.9-eclipse-temurin-21 AS builder
+FROM ubuntu:latest
 
-WORKDIR /app
+LABEL maintainer="Kishore Pashindla <kpashindla@albanybeck.com>"
 
-COPY pom.xml .
+# Set environment variables
+ENV TOMCAT_VERSION 9.0.80
+ENV CATALINA_HOME /opt/tomcat
+ENV JAVA_HOME /usr/lib/jvm/java-21-openjdk-amd64
+ENV PATH $CATALINA_HOME/bin:$PATH
 
-RUN mvn dependency:go-offline -B
+# Install JDK & wget packages.
+RUN apt-get -y update && apt-get -y upgrade
+RUN apt-get -y install openjdk-21-jdk wget
 
-COPY src ./src
+# Install and configure Tomcat.
+RUN mkdir $CATALINA_HOME
 
-RUN mvn clean package
+RUN wget https://archive.apache.org/dist/tomcat/tomcat-9/v${TOMCAT_VERSION}/bin/apache-tomcat-${TOMCAT_VERSION}.tar.gz -O /tmp/tomcat.tar.gz
 
-FROM openjdk:21-jdk  AS running
+RUN cd /tmp && tar xvfz tomcat.tar.gz
 
-WORKDIR /app
+RUN cp -Rv /tmp/apache-tomcat-${TOMCAT_VERSION}/* $CATALINA_HOME
 
-COPY --from=builder ./app/target/mysampleapp.jar ./app.jar
+RUN rm -rf /tmp/apache-tomcat-${TOMCAT_VERSION}
 
+RUN rm -rf /tmp/tomcat.tar.gz
+
+COPY target/mysampleapp.war /opt/tomcat/webapps
 EXPOSE 8085
-
-ENTRYPOINT ["java", "-jar", "app.jar"]
+#CMD /usr/local/tomcat/bin/catalina.sh run
+CMD ["/opt/tomcat/bin/catalina.sh", "run"]
