@@ -8,7 +8,7 @@ public class HomeController {
 	
 	@GetMapping("/")
 	public String home() {
-		return "Welcome";
+		return "Welcome to CI/CD Pipeline using Jenkins";
 	}
 	
 	
