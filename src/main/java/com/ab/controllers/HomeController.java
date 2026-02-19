@@ -1,6 +1,6 @@
 package com.ab.controllers;
 
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 
 @Controller
