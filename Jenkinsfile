@@ -1,6 +1,7 @@
 pipeline {
     agent any
      environment {
+          ANSIBLE_HOST_KEY_CHECKING = "False"
           DOCKER_CREDS = credentials('DOCKER_HUB_LOGIN')
      }
     tools { 
@@ -72,7 +73,6 @@ pipeline {
 
           stage('deploy-QA') {
          	         steps {
-         	                 sh script: 'export ANSIBLE_HOST_KEY_CHECKING=False'
          	                 sh script: 'cd  $WORKSPACE'
                              sh script: 'ansible-playbook deploy-kube.yml --extra-vars "env=qa build=$BUILD_NUMBER"'
                     }
