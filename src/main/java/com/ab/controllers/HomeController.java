@@ -11,7 +11,7 @@ public class HomeController {
 	
 	@GetMapping("/")
 	public String home() {
-		return "Happy to run in the Kubernetes Cluster!!!";
+		return "Hello, happy to run in the Kubernetes Cluster!!!";
 	}
 	
 	

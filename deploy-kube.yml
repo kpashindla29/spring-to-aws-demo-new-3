@@ -16,7 +16,7 @@
       shell: |
         if [ `kubectl get svc | grep sampleapp  | awk '{print $1}' | wc -l` -gt 0 ]; then
            echo "app service found, No actions taken"
-           #kubectl delete svc `kubectl get svc | grep sampleapp | awk '{print $1}'`
+           kubectl delete svc `kubectl get svc | grep sampleapp | awk '{print $1}'`
         else
            echo "Creating App Services"
            kubectl expose deployment sampleapp --name sampleapp --type NodePort --port 80 --target-port 8085
