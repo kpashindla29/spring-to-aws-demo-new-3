@@ -70,6 +70,14 @@ pipeline {
               }
          }
 
+          stage('deploy-QA') {
+         	         steps {
+         	                 sh script: 'cd  $WORKSPACE'
+                             sh script: 'ansible-playbook deploy-kube.yml --extra-vars "env=qa build=$BUILD_NUMBER"'
+                    }
+
+          }
+
 
 
 //     stage ('Deploy') {
