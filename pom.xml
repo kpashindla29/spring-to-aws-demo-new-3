@@ -65,6 +65,27 @@
 			<version>4.4.1</version>
 			<scope>test</scope>
 		</dependency>
+
+
+		<!-- Spring Boot Actuator - exposes metrics endpoints -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-actuator</artifactId>
+		</dependency>
+
+		<!-- Micrometer Prometheus registry - formats metrics for Prometheus -->
+		<dependency>
+			<groupId>io.micrometer</groupId>
+			<artifactId>micrometer-registry-prometheus</artifactId>
+		</dependency>
+
+		<!-- Optional: JVM extras for more detailed metrics -->
+		<dependency>
+			<groupId>io.github.mweirauch</groupId>
+			<artifactId>micrometer-jvm-extras</artifactId>
+			<version>0.2.2</version>
+		</dependency>
+
 	</dependencies>
 
 	<build>
