@@ -11,7 +11,7 @@ public class HomeController {
 	
 	@GetMapping("/")
 	public String home() {
-		return "Kubernetes Cluster!!!";
+		return "Spring Boot Application with Monitoring and Alerting!!";
 	}
 	
 	
