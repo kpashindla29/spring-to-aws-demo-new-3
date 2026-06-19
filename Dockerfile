@@ -1,7 +1,5 @@
 FROM ubuntu:latest
 
-LABEL maintainer="Kishore Pashindla <kpashindla@albanybeck.com>"
-
 # Use Tomcat 10.1.x
 ENV TOMCAT_VERSION 10.1.20
 ENV CATALINA_HOME /opt/tomcat
